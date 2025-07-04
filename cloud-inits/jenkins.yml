@@ -1,0 +1,39 @@
+#cloud-config
+groups:
+  - docker
+users:
+  - name: danylevskyi
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: docker
+    ssh_import_id: "gh:danylevskyi"
+    shell: /bin/bash
+  - name: eugenepyvovarov
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: docker
+    ssh_import_id: "gh:eugenepyvovarov"
+    shell: /bin/bash
+  - name: kovhan
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: docker
+    ssh_import_id: "gh:kovhan"
+    shell: /bin/bash
+  - name: latinyanin
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: docker
+    ssh_import_id: "gh:latinyanin"
+    shell: /bin/bash
+  - name: ci
+    ssh-authorized-keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF5ziWSFzeAjCqvHdVlZY2jVkXCugs1rG5Q5go2X/VrG
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: docker
+    shell: /bin/bash
+hostname: jenkins
+fqdn: jenkins.br24.se
+prefer_fqdn_over_hostname: false
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+swap:
+  filename: /swapfile
+  size: 17179869184
