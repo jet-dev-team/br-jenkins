@@ -1,0 +1,34 @@
+- _default_variables: &default_variables
+    name: default_variables
+    hostname: jenkins.br24.se
+    project_name: jenkins
+    jenkins_folder: CUSTOMERS/NRXS/JENKINS
+    git_repo: git@github.com:jet-dev-team/br-jenkins.git
+    git_deploy_key_name: DEPLOY_KEY__BR_JENKINS
+    dest_credentials_id: SSH_CI__JENKINS_JET_DEV
+
+- scm:
+    name: repository
+    scm:
+      - git:
+          url: "{git_repo}"
+          credentials-id: "{git_deploy_key_name}"
+          branches:
+            - "*/main"
+
+- defaults:
+    name: global
+    <<: *default_variables
+    folder_properties:
+      "": ""
+    folder_properties_xml: !j2: |
+      <com.mig82.folders.properties.FolderProperties plugin="folder-properties">
+        <properties>
+          {% for key, value in folder_properties.items() -%}
+            <com.mig82.folders.properties.StringProperty>
+              <key>{{ key }}</key>
+              <value>{{ value }}</value>
+            </com.mig82.folders.properties.StringProperty>
+          {% endfor %}
+        </properties>
+      </com.mig82.folders.properties.FolderProperties>

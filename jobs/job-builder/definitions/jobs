@@ -1,0 +1,69 @@
+- _job_defaults: &job_default
+    name: "job_default"
+    project-type: pipeline
+    description: "{description}"
+    parameters: "{parameters}"
+    properties: "{properties}"
+    triggers: "{triggers}"
+    pipeline-scm:
+      scm:
+        - repository
+      script-path: jobs/{dir_name}/Jenkinsfile
+      lightweight-checkout: true
+
+- job-template:
+    name: "{jenkins_folder}/{name}"
+    id: builder-job
+    <<: *job_default
+
+- job-template:
+    name: "{jenkins_folder}/JOBS/{name}"
+    id: jenkins-job
+    <<: *job_default
+
+- project:
+    name: "jobs"
+    jobs:
+      - "builder-job":
+          name: JOB_BUILDER
+          dir_name: job-builder
+          properties:
+            - inject:
+                keep-system-variables: true
+                properties-content: |
+                  HV_ANSIBLE_CONNECTION=local
+                  JJB_USER_CREDENTIALS_ID=JJB_USER
+                  JJB_PASSWORD_CREDENTIALS_ID=JJB_PASSWORD
+                  JJB_JENKINS_URL=http://localhost:8080
+      # - "jenkins-job":
+      #     name: SERVER_INIT
+      #     description: "Initialisation of the server."
+      #     dir_name: server-init
+      # - "jenkins-job":
+      #     name: DOCKER
+      #     description: "Install Docker and Docker Compose."
+      #     dir_name: docker
+      # - "jenkins-job":
+      #     name: JENKINS
+      #     description: "Install/upgrade Jenkins."
+      #     dir_name: jenkins
+      # - "jenkins-job":
+      #     name: CADDY
+      #     description: "Install Caddy."
+      #     dir_name: caddy
+      # - "jenkins-job":
+      #     name: JENKINS_BACKUP
+      #     description: "Backup Jenkins."
+      #     dir_name: jenkins-backup
+      #     triggers:
+      #       - timed: 'H 1 * * *'
+      # - "jenkins-job":
+      #     name: JENKINS_RESTORE
+      #     description: "Restore Jenkins."
+      #     dir_name: jenkins-restore
+    parameters: []
+    description: ""
+    triggers: []
+    properties:
+      - build-discarder:
+          num-to-keep: 5

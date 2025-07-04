@@ -1,0 +1,36 @@
+class Config {
+  static def required_params = [
+    'HV_ANSIBLE_CONNECTION': '',
+    'JJB_USER_CREDENTIALS_ID': '',
+    'JJB_PASSWORD_CREDENTIALS_ID': '',
+    'JJB_JENKINS_URL': '',
+  ]
+}
+
+pipeline {
+
+  agent any
+
+  options {
+    ansiColor('xterm')
+    timestamps()
+    retry(1)
+  }
+
+  stages {
+    stage('Job wrapper') {
+      environment {
+        JJB_USER = credentials("${JJB_USER_CREDENTIALS_ID}")
+        JJB_PASSWORD = credentials("${JJB_PASSWORD_CREDENTIALS_ID}")
+      }
+
+      steps {
+        withFolderProperties {
+          script {
+            load "jobs/job-wrapper.groovy"
+          }
+        }
+      }
+    }
+  }
+}

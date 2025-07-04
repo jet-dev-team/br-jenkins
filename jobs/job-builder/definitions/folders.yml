@@ -1,0 +1,30 @@
+- _folder_defaults: &folder_default
+    name: "folder_default"
+    project-type: folder
+    properties: "{properties}"
+
+- job-template:
+    name: "{jenkins_folder}"
+    id: root-folder
+    <<: *folder_default
+
+- job-template:
+    name: "{jenkins_folder}/JOBS"
+    id: jobs-folder
+    <<: *folder_default
+
+- project:
+    name: folders
+    jobs:
+      - "root-folder":
+      - "jobs-folder":
+          folder_properties:
+            DEST_HOST: "{hostname}"
+            DEST_USER: "ci"
+            DEST_PORT: 22
+            DEST_CREDENTIALS_ID: "{dest_credentials_id}"
+            GIT_REPO: "{git_repo}"
+          properties:
+            - raw:
+                xml: "{folder_properties_xml}"
+    properties: []

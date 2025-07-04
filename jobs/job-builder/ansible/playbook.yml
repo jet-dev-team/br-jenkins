@@ -1,0 +1,62 @@
+---
+- name: Job Builder
+  hosts: host
+  become: true
+
+  vars:
+    jjb_user: "{{ lookup('ansible.builtin.env', 'JJB_USER') | mandatory }}"
+    jjb_password: "{{ lookup('ansible.builtin.env', 'JJB_PASSWORD') | mandatory }}"
+
+  pre_tasks:
+    - name: Check if all required vars are defined and not empty
+      ansible.builtin.fail:
+        msg: "The variable '{{ item }}' is not defined or is empty"
+      when: vars[item] is not defined or vars[item] | length == 0
+      loop:
+        - jjb_jenkins_url
+
+  tasks:
+    - name: Ensure dependencies are installed
+      ansible.builtin.apt:
+        name:
+          - python3-pip
+          - python3-venv
+        state: present
+        update_cache: true
+
+    - name: Create virtual env directory
+      ansible.builtin.file:
+        path: /var/venv
+        state: directory
+        mode: '0775'
+
+    - name: Make sure we have latest pip
+      ansible.builtin.pip:
+        name: pip
+        state: latest # noqa package-latest
+        virtualenv: /var/venv
+        virtualenv_command: python3 -m venv
+
+    - name: Install pip packages
+      ansible.builtin.pip:
+        name:
+          - jenkins-job-builder
+        virtualenv: /var/venv
+        virtualenv_command: python3 -m venv
+
+    - name: Create Jenkins Job Builder configuration file
+      ansible.builtin.copy:
+        dest: "{{ playbook_dir }}/../config.ini"
+        content: |
+          [jenkins]
+          user={{ jjb_user }}
+          password={{ jjb_password }}
+          url={{ jjb_jenkins_url }}
+        mode: '0644'
+
+    - name: Update Jenkins with job definition
+      ansible.builtin.shell: |
+        . /var/venv/bin/activate && \
+        jenkins-jobs --flush-cache --conf {{ playbook_dir }}/../config.ini update {{ playbook_dir }}/../definitions
+      changed_when: false
+ 
