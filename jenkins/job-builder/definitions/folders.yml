@@ -23,7 +23,6 @@
             DEST_USER: "ci"
             DEST_PORT: 22
             DEST_CREDENTIALS_ID: "{dest_credentials_id}"
-            GIT_REPO: "{git_repo}"
           properties:
             - raw:
                 xml: "{folder_properties_xml}"

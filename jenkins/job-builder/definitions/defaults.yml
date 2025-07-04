@@ -3,18 +3,19 @@
     hostname: jenkins.br24.se
     project_name: jenkins
     jenkins_folder: CUSTOMERS/NRXS/JENKINS
-    git_repo: git@github.com:jet-dev-team/br-jenkins.git
-    git_deploy_key_name: DEPLOY_KEY__BR_JENKINS
+    devops_repo_url: git@github.com:jet-dev-team/br-jenkins.git
+    devops_repo_deploy_key_credentials_id: DEPLOY_KEY__BR_JENKINS
+    devops_repo_branch: main
     dest_credentials_id: SSH_CI__JENKINS_JET_DEV
 
 - scm:
     name: repository
     scm:
       - git:
-          url: "{git_repo}"
-          credentials-id: "{git_deploy_key_name}"
+          url: "{devops_repo_url}"
+          credentials-id: "{devops_repo_deploy_key_credentials_id}"
           branches:
-            - "*/main"
+            - "*/{devops_repo_branch}"
 
 - defaults:
     name: global
