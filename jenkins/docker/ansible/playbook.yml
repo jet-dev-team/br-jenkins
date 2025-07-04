@@ -1,0 +1,101 @@
+---
+
+- name: Docker and Docker Compose Installation
+  hosts: host
+
+  vars:
+    docker_compose_version: v2.38.1
+
+  tasks:
+    - name: Set facts
+      set_fact:
+        docker_plugin_dir: "{{ ansible_env.HOME }}/.docker/cli-plugins"
+
+    - name: Update apt cache if needed.
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 86400
+
+    - name: Wait for APT Lock.
+      ansible.builtin.shell: while lsof /var/lib/dpkg/lock-frontend ; do sleep 10; done;
+      changed_when: false
+
+    - name: Ensure dependencies are installed.
+      become: true
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - python3-pip
+          - python3-venv
+        state: present
+
+    - name: Make sure we have latest pip.
+      ansible.builtin.pip:
+        name: pip
+        state: latest # noqa package-latest
+        virtualenv: /var/venv
+        virtualenv_command: python3 -m venv
+
+    - name: Install pip packages.
+      become: true
+      ansible.builtin.pip:
+        name:
+          - docker
+        virtualenv: /var/venv
+        virtualenv_command: python3 -m venv
+
+    - name: Check if Docker Compose V2 plugin is installed
+      ansible.builtin.shell: |
+        if docker compose version > /dev/null 2>&1; then
+          echo "found"
+        else
+          echo "notfound"
+        fi
+      register: docker_compose_v2_check
+      changed_when: false
+      failed_when: false
+
+    - name: Make sure there is Docker plugin directory
+      ansible.builtin.file:
+        path: "{{ docker_plugin_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download Docker Compose V2 plugin
+      ansible.builtin.shell: |
+        wget "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-linux-x86_64" \
+          -O {{ docker_plugin_dir }}/docker-compose
+        chmod 755 {{ docker_plugin_dir }}/docker-compose
+      when: "'notfound' in docker_compose_v2_check.stdout"
+
+    - name: Make Docker Compose V2 plugin executable
+      ansible.builtin.file:
+        path: "{{ docker_plugin_dir }}/docker-compose"
+        mode: "0755"
+      when: "'notfound' in docker_compose_v2_check.stdout"
+
+    - name: Configure docker daemon.json
+      become: true
+      ansible.builtin.copy:
+        content: |
+          {
+            "log-driver": "json-file",
+            "log-opts": {
+              "max-size": "10m",
+              "max-file": "3"
+            }
+          }
+        dest: '/etc/docker/daemon.json'
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Restart Docker
+
+  handlers:
+    - name: Restart Docker
+      become: true
+      ansible.builtin.service:
+        name: docker
+        state: restarted

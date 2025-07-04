@@ -23,10 +23,10 @@
           name: SERVER_INIT
           description: "Initialisation of the server."
           dir_name: server-init
-      # - "jenkins-job":
-      #     name: DOCKER
-      #     description: "Install Docker and Docker Compose."
-      #     dir_name: docker
+      - "jenkins-job":
+          name: DOCKER
+          description: "Install Docker and Docker Compose."
+          dir_name: docker
       # - "jenkins-job":
       #     name: JENKINS
       #     description: "Install/upgrade Jenkins."
