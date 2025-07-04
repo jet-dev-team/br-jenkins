@@ -44,9 +44,19 @@
         virtualenv: /var/venv
         virtualenv_command: python3 -m venv
 
+    - name: Define tmp dir for JJB definitions based on timestamp
+      set_fact:
+        jjb_dir: "/tmp/jjb-{{ ansible_date_time.iso8601_basic }}"
+
+    - name: Make sure temp dir exists
+      file:
+        path: "{{ jjb_dir }}"
+        state: directory
+        mode: '0755'
+
     - name: Create Jenkins Job Builder configuration file
       ansible.builtin.copy:
-        dest: "{{ playbook_dir }}/../config.ini"
+        dest: "{{ jjb_dir }}/config.ini"
         content: |
           [jenkins]
           user={{ jjb_user }}
@@ -54,9 +64,25 @@
           url={{ jjb_jenkins_url }}
         mode: '0644'
 
+    - name: Make sure definitions dir exists inside temp dir
+      file:
+        path: "{{ jjb_dir }}/definitions"
+        state: directory
+        mode: '0755'
+
+    - name: Copy JJB definitions to remove server
+      copy:
+        src: "{{ item }}"
+        dest: "{{ jjb_dir }}/definitions/"
+      loop: "{{ lookup('fileglob', '../definitions/*.yml', wantlist=True) }}"
+
     - name: Update Jenkins with job definition
       ansible.builtin.shell: |
         . /var/venv/bin/activate && \
-        jenkins-jobs --flush-cache --conf {{ playbook_dir }}/../config.ini update {{ playbook_dir }}/../definitions
+        jenkins-jobs --flush-cache --conf {{ jjb_dir }}/config.ini update {{ jjb_dir }}/definitions
       changed_when: false
- 
+
+    - name: Remove tmp dir
+      file:
+        path: "{{ jjb_dir }}"
+        state: absent
