@@ -1,0 +1,79 @@
+---
+
+- name: Caddy
+  hosts: host
+
+  vars:
+    caddy_app_dir: /srv/caddy
+    caddy_version: 2.10.0
+    network_name: proxy
+
+  tasks:
+    - name: Increase net.core.rmem_max (Fix UDP Buffer Size error for QUIC connections)
+      become: true
+      ansible.posix.sysctl:
+        name: net.core.rmem_max
+        value: '2500000'
+        state: present
+        reload: true
+
+    - name: Increase net.core.wmem_max (Fix UDP Buffer Size error for QUIC connections)
+      become: true
+      ansible.posix.sysctl:
+        name: net.core.wmem_max
+        value: '2500000'
+        state: present
+        reload: true
+
+    - name: Make sure there is a network
+      community.docker.docker_network:
+        name: "{{ network_name }}"
+
+    - name: Make sure there is caddy configuration directory
+      become: true
+      ansible.builtin.file:
+        path: "{{ caddy_app_dir }}/config"
+        state: directory
+        mode: '0755'
+        recurse: true
+        owner: "{{ ansible_user }}"
+        group: docker
+
+    - name: Make sure there is caddy directory
+      ansible.builtin.file:
+        path: "{{ caddy_app_dir }}"
+        state: directory
+        group: docker
+        owner: "{{ ansible_user }}"
+        recurse: true
+        mode: "0755"
+
+    - name: Make sure there is caddy config file
+      ansible.builtin.template:
+        src: ../templates/Caddyfile
+        dest: "{{ caddy_app_dir }}/Caddyfile"
+        group: docker
+        owner: "{{ ansible_user }}"
+        mode: "0644"
+
+    - name: Run Caddy container
+      community.docker.docker_container:
+        name: caddy
+        image: "caddy:{{ caddy_version }}"
+        restart_policy: always
+        recreate: true
+        ports:
+          - "80:80"
+          - "443:443"
+          - "443:443/udp"
+        mounts:
+          - type: bind
+            source: "{{ caddy_app_dir }}/Caddyfile"
+            target: /etc/caddy/Caddyfile
+            read_only: false
+          - type: bind
+            source: "{{ caddy_app_dir }}/config"
+            target: /config
+            read_only: false
+        networks:
+          - name: "{{ network_name }}"

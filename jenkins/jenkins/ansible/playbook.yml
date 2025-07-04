@@ -1,0 +1,64 @@
+---
+
+- name: Jenkins Installation
+  hosts: host
+
+  vars:
+    jenkins_version: 2.504.3
+    jenkins_app_dir: /srv/jenkins
+    jenkins_docker_volume: jenkins_home
+    jenkins_docker_network: proxy
+
+  tasks:
+    - name: Make sure there is a network
+      community.docker.docker_network:
+        name: "{{ jenkins_docker_network }}"
+
+    - name: Make sure there is a volume
+      community.docker.docker_volume:
+        name: "{{ jenkins_docker_volume }}"
+
+    - name: Make sure there is Jenkins directory
+      become: true
+      ansible.builtin.file:
+        path: "{{ jenkins_app_dir }}"
+        state: directory
+        group: docker
+        owner: ci
+        recurse: true
+        mode: "0755"
+
+    - name: Populate Dockerfile for Jenkins
+      ansible.builtin.template:
+        src: "../templates/Dockerfile"
+        dest: "{{ jenkins_app_dir }}/Dockerfile"
+        group: docker
+        owner: ci
+        mode: "0644"
+
+    - name: Build Docker image
+      community.docker.docker_image:
+        name: jenkins-with-ansible
+        tag: "{{ jenkins_version }}"
+        build:
+          path: "{{ jenkins_app_dir }}"
+          pull: true
+          args:
+            JENKINS_VERSION: "{{ jenkins_version }}"
+        source: build
+
+    - name: Run container
+      community.docker.docker_container:
+        name: jenkins
+        image: "jenkins-with-ansible:{{ jenkins_version }}"
+        state: started
+        restart_policy: unless-stopped
+        recreate: true
+        ports:
+          - "8080:8080"
+        volumes:
+          - "{{ jenkins_docker_volume }}:/var/jenkins_home"
+        networks:
+          - name: "{{ jenkins_docker_network }}"
+        env:
+          JAVA_OPTS: '-Xms2g -Xmx3g -XX:+UseG1GC -XX:MaxGCPauseMillis=200'

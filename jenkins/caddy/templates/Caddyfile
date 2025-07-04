@@ -1,0 +1,26 @@
+{
+	log {
+		output file /var/log/caddy.log {
+			roll_size 512mb
+			roll_keep 7
+			roll_keep_for 360h
+		}
+	}
+}
+
+(basic_auth) {
+	basic_auth {
+		# Login: "br", password: "at4gahQu"
+		br $2a$14$MPfyDpOEpKDwMLn4i7KmL.1Gf61J5aU0zoBfR6v1333QP47GHLld2
+	}
+}
+
+jenkins.br24.se {
+	import basic_auth
+	reverse_proxy jenkins:8080 {
+		header_up -Authorization
+	}
+	handle_errors {
+		header -Authorization
+	}
+}

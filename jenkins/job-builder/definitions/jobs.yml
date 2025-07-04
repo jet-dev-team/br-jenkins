@@ -27,14 +27,14 @@
           name: DOCKER
           description: "Install Docker and Docker Compose."
           dir_name: docker
-      # - "jenkins-job":
-      #     name: JENKINS
-      #     description: "Install/upgrade Jenkins."
-      #     dir_name: jenkins
-      # - "jenkins-job":
-      #     name: CADDY
-      #     description: "Install Caddy."
-      #     dir_name: caddy
+      - "jenkins-job":
+          name: JENKINS
+          description: "Install/upgrade Jenkins."
+          dir_name: jenkins
+      - "jenkins-job":
+          name: CADDY
+          description: "Install Caddy."
+          dir_name: caddy
       # - "jenkins-job":
       #     name: JENKINS_BACKUP
       #     description: "Backup Jenkins."
