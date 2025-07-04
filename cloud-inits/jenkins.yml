@@ -24,7 +24,7 @@ users:
     shell: /bin/bash
   - name: ci
     ssh-authorized-keys:
-      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF5ziWSFzeAjCqvHdVlZY2jVkXCugs1rG5Q5go2X/VrG
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDlJK7XiiKDhCB+TtfhL2YWkL3JmCPDMEwJfhhmtIJ7l
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: docker
     shell: /bin/bash
@@ -36,4 +36,4 @@ package_upgrade: true
 package_reboot_if_required: true
 swap:
   filename: /swapfile
-  size: 17179869184
+  size: 4G

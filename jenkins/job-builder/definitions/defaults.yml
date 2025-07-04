@@ -6,7 +6,7 @@
     devops_repo_url: git@github.com:jet-dev-team/br-jenkins.git
     devops_repo_deploy_key_credentials_id: DEPLOY_KEY__BR_JENKINS
     devops_repo_branch: main
-    dest_credentials_id: SSH_CI__JENKINS_JET_DEV
+    dest_credentials_id: SSH_CI__BR_JENKINS
 
 - scm:
     name: repository
