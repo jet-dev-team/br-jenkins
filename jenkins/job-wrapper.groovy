@@ -2,19 +2,21 @@ import org.apache.commons.io.FilenameUtils;
 
 def vars = getVariables()
 
-installAnsibleRequirements(vars.requirements_file)
+installAnsibleRequirements(vars.requirements_file, vars.ansible_collections)
 
 def inventoryContent = getAnsibleInventoryContent(vars)
 
-ansiblePlaybook(
-  extraVars: vars,
-  inventoryContent: inventoryContent,
-  playbook: "${vars.base_path}/ansible/playbook.yml",
-  credentialsId: "${vars.dest_credentials_id}",
-  disableHostKeyChecking: true,
-  colorized: true,
-  extras: '-v',
-)
+withEnv(["ANSIBLE_COLLECTIONS_PATH=${vars.ansible_collections}"]) {
+  ansiblePlaybook(
+    extraVars: vars,
+    inventoryContent: inventoryContent,
+    playbook: "${vars.base_path}/ansible/playbook.yml",
+    credentialsId: "${vars.dest_credentials_id}",
+    disableHostKeyChecking: true,
+    colorized: true,
+    extras: '-v'
+  )
+}
 
 /*
  * Utility methods.
@@ -36,16 +38,21 @@ def getJobBasePath() {
  */
 def getVariables() {
   def vars = [:]
+  def envVars = env.getEnvironment()
 
   for (entry in Config.required_params.entrySet()) {
     def key = entry.key
     def defaultValue = entry.value
 
-    if (!env."${key}" && defaultValue == '') {
+    // Check for value in envVars, then env.* and then default. 
+    def envVarsValue = envVars[key]?.trim()
+    def envValue = env."${key}"?.trim()
+    vars[key.toLowerCase()] = envVarsValue ?: envValue ?: defaultValue
+
+    // Error if neither is set (defaultValue is also empty)
+    if (!vars[key.toLowerCase()]) {
       error("${key} is not set and has no default value. Aborting job...")
     }
-
-    vars[key.toLowerCase()] = env."${key}" ?: defaultValue
   }
 
   vars.putAll(mapKeysToLowerCase(params))
@@ -53,20 +60,17 @@ def getVariables() {
   vars['build_number'] = BUILD_NUMBER
   vars['base_path'] = basePath;
   vars['requirements_file'] = "${vars.base_path}/ansible/requirements.yml"
+  vars['ansible_collections'] = "/tmp/ansible_collections/${envVars.JOB_NAME}"
 
   return vars
 }
 
 /*
  * Installs ansible-galaxy requirements if the corresponding file exists.
- * This step can be skipped by setting `SKIP_ANSIBLE_REQUIREMENTS` env variable.
- * If `FORCE_ANSIBLE_REQUIREMENTS` env variable is set, the installation will be
- * executed with `--force` flag.
  */
-def installAnsibleRequirements(requirementsFilePath) {
-  if (fileExists(requirementsFilePath) && !env.SKIP_ANSIBLE_REQUIREMENTS) {
-    def shouldForce = env.FORCE_ANSIBLE_REQUIREMENTS ? "--force" : ""
-    sh "ansible-galaxy install -r ${requirementsFilePath} ${shouldForce}"
+def installAnsibleRequirements(requirementsFilePath, ansibleCollectionsPaths) {
+  if (fileExists(requirementsFilePath)) {
+    sh "ANSIBLE_COLLECTIONS_PATH=${ansibleCollectionsPaths} ansible-galaxy collection install -r ${requirementsFilePath} -p ${ansibleCollectionsPaths}"
   }
 }
 
@@ -85,6 +89,9 @@ def getAnsibleInventoryContent(vars) {
   hostVars.each {
     hostString = hostString.concat(" ${it.key.replace("hv_", "")}=${it.value}")
   }
+
+  // Force using ansible_python_interpreter.
+  hostString += " ansible_python_interpreter=/usr/bin/python3"
 
   return hostString
 }
