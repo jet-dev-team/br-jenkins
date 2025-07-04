@@ -12,11 +12,6 @@
       lightweight-checkout: true
 
 - job-template:
-    name: "{jenkins_folder}/{name}"
-    id: builder-job
-    <<: *job_default
-
-- job-template:
     name: "{jenkins_folder}/JOBS/{name}"
     id: jenkins-job
     <<: *job_default
@@ -24,21 +19,10 @@
 - project:
     name: "jobs"
     jobs:
-      - "builder-job":
-          name: JOB_BUILDER
-          dir_name: job-builder
-          properties:
-            - inject:
-                keep-system-variables: true
-                properties-content: |
-                  HV_ANSIBLE_CONNECTION=local
-                  JJB_USER_CREDENTIALS_ID=JJB_USER
-                  JJB_PASSWORD_CREDENTIALS_ID=JJB_PASSWORD
-                  JJB_JENKINS_URL=http://localhost:8080
-      # - "jenkins-job":
-      #     name: SERVER_INIT
-      #     description: "Initialisation of the server."
-      #     dir_name: server-init
+      - "jenkins-job":
+          name: SERVER_INIT
+          description: "Initialisation of the server."
+          dir_name: server-init
       # - "jenkins-job":
       #     name: DOCKER
       #     description: "Install Docker and Docker Compose."

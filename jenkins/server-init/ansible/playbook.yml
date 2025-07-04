@@ -1,0 +1,50 @@
+---
+
+- name: Initial Server Config
+  hosts: host
+  become: true
+
+  tasks:
+    - name: Disable SSH root login
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+      notify: Restart SSH
+
+    - name: Wait for APT Lock.
+      ansible.builtin.shell: while lsof /var/lib/dpkg/lock-frontend ; do sleep 10; done;
+      changed_when: false
+
+    - name: Ensure dependencies are installed
+      ansible.builtin.apt:
+        name:
+          - python3-pip
+          - python3-venv
+        state: present
+
+    - name: Create virtual env directory
+      ansible.builtin.file:
+        path: /var/venv
+        state: directory
+        mode: '0775'
+
+    - name: Make sure we have latest pip
+      ansible.builtin.pip:
+        name: pip
+        state: latest # noqa package-latest
+        virtualenv: /var/venv
+        virtualenv_command: python3 -m venv
+
+    - name: Set vm.swappiness
+      ansible.posix.sysctl:
+        name: vm.swappiness
+        value: '2'
+        state: present
+
+  handlers:
+    - name: Restart SSH
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
