@@ -8,7 +8,7 @@
     pipeline-scm:
       scm:
         - repository
-      script-path: jobs/{dir_name}/Jenkinsfile
+      script-path: jenkins/{dir_name}/Jenkinsfile
       lightweight-checkout: true
 
 - job-template:
