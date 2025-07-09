@@ -15,7 +15,7 @@
         "files.trimTrailingWhitespace": true,
         "files.insertFinalNewline": true,
         "files.associations": {
-          "*.playbook.yml": "ansible",
+          "*playbook.yml": "ansible",
           "*.pipeline": "groovy"
         }
       },
