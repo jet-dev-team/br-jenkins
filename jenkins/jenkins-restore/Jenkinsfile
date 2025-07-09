@@ -1,0 +1,35 @@
+class Config {
+  static def required_params = [
+    'DEST_HOST': '',
+    'DEST_USER': '',
+    'DEST_PORT': '',
+    'DEST_CREDENTIALS_ID': '',
+  ]
+}
+
+pipeline {
+
+  agent any
+
+  options {
+    ansiColor('xterm')
+    timestamps()
+    retry(1)
+  }
+
+  parameters {
+    string(name: 'BACKUP_NAME', defaultValue: 'backup.latest.tar.gz', description: 'Name of a backup file to restore from.')
+  }
+
+  stages {
+    stage('Job wrapper') {
+      steps {
+        withFolderProperties {
+          script {
+            load "${env.WORKSPACE}/jobs/job-wrapper.groovy"
+          }
+        }
+      }
+    }
+  }
+}

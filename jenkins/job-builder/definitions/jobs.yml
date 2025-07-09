@@ -41,10 +41,10 @@
           dir_name: jenkins-backup
           triggers:
             - timed: 'H 1 * * *'
-      # - "jenkins-job":
-      #     name: JENKINS_RESTORE
-      #     description: "Restore Jenkins."
-      #     dir_name: jenkins-restore
+      - "jenkins-job":
+          name: JENKINS_RESTORE
+          description: "Restore Jenkins."
+          dir_name: jenkins-restore
     parameters: []
     description: ""
     triggers: []

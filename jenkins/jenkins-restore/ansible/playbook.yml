@@ -1,0 +1,79 @@
+---
+- name: Restore the Jenkins
+  hosts: host
+
+  vars:
+    backup_name: ''
+    jenkins_container_name: jenkins
+    jenkins_docker_volume: jenkins_home
+    backups_dir: /srv/backups/jenkins
+    tmp_container_name: tmp_restore_container
+    tmp_restore_dir: /tmp/restore
+
+  tasks:
+    - name: Start restore
+      ansible.builtin.debug:
+        msg: 'Restoring Jenkins from the backup file "{{ backup_name }}"'
+
+    - name: Create TMP restore directory
+      become: true
+      ansible.builtin.file:
+        path: "{{ tmp_restore_dir }}"
+        state: directory
+        group: docker
+        owner: ci
+        recurse: true
+        mode: "0644"
+
+    - name: Unarchive a backup
+      become: true
+      ansible.builtin.unarchive:
+        src: "{{ backups_dir }}/{{ backup_name }}"
+        dest: "{{ tmp_restore_dir }}"
+        remote_src: true
+        extra_opts:
+          - '--strip-components=1'
+
+    - name: Stop Jenkins container
+      community.docker.docker_container:
+        name: "{{ jenkins_container_name }}"
+        state: stopped
+
+    - name: Create a temporary container to clean and restore files
+      community.docker.docker_container:
+        name: "{{ tmp_container_name }}"
+        image: alpine
+        command: sleep infinity
+        volumes:
+          - "{{ jenkins_docker_volume }}:/backup_restore"
+          - "{{ tmp_restore_dir }}:/tmp_restore"
+
+    - name: Clean old data in the volume
+      community.docker.docker_container_exec:
+        container: "{{ tmp_container_name }}"
+        command: >
+          /bin/sh -c "rm -rf /backup_restore/{*,.*} 2>/dev/null"
+
+    - name: Copy files to the volume
+      community.docker.docker_container_exec:
+        container: "{{ tmp_container_name }}"
+        command: >
+          /bin/sh -c "cp -r /tmp_restore/. /backup_restore &&
+              chown -R 1000:1000 /backup_restore &&
+              chmod -R 0755 /backup_restore"
+
+    - name: Remove temporary container
+      community.docker.docker_container:
+        name: "{{ tmp_container_name }}"
+        state: absent
+
+    - name: Start Jenkins container
+      community.docker.docker_container:
+        name: "{{ jenkins_container_name }}"
+        state: started
+
+    - name: Clean the TMP restore directory
+      become: true
+      ansible.builtin.file:
+        path: "{{ tmp_restore_dir }}"
+        state: absent
