@@ -22,7 +22,7 @@ pipeline {
       steps {
         withFolderProperties {
           script {
-            load "${env.WORKSPACE}/jobs/job-wrapper.groovy"
+            load "jenkins/job-wrapper.groovy"
           }
         }
       }
