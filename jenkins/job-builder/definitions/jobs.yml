@@ -35,12 +35,12 @@
           name: CADDY
           description: "Install Caddy."
           dir_name: caddy
-      # - "jenkins-job":
-      #     name: JENKINS_BACKUP
-      #     description: "Backup Jenkins."
-      #     dir_name: jenkins-backup
-      #     triggers:
-      #       - timed: 'H 1 * * *'
+      - "jenkins-job":
+          name: JENKINS_BACKUP
+          description: "Backup Jenkins."
+          dir_name: jenkins-backup
+          triggers:
+            - timed: 'H 1 * * *'
       # - "jenkins-job":
       #     name: JENKINS_RESTORE
       #     description: "Restore Jenkins."

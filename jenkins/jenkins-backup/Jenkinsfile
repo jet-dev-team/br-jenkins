@@ -1,0 +1,31 @@
+class Config {
+  static def required_params = [
+    'DEST_HOST': '',
+    'DEST_USER': '',
+    'DEST_PORT': '',
+    'DEST_CREDENTIALS_ID': '',
+  ]
+}
+
+pipeline {
+
+  agent any
+
+  options {
+    ansiColor('xterm')
+    timestamps()
+    retry(1)
+  }
+
+  stages {
+    stage('Job wrapper') {
+      steps {
+        withFolderProperties {
+          script {
+            load "${env.WORKSPACE}/jobs/job-wrapper.groovy"
+          }
+        }
+      }
+    }
+  }
+}
