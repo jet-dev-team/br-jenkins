@@ -6,7 +6,7 @@
   vars:
     jenkins_docker_volume: 'jenkins_home'
     backups_dir: /srv/backups/jenkins
-    docker_volume_backup_version: '2'
+    docker_volume_backup_version: 'latest'
 
   tasks:
     - name: Make sure local backups directory exists
