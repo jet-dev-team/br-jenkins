@@ -50,7 +50,7 @@
 
     - name: Make sure there is caddy config file
       ansible.builtin.template:
-        src: ../templates/Caddyfile
+        src: Caddyfile
         dest: "{{ caddy_app_dir }}/Caddyfile"
         group: docker
         owner: "{{ ansible_user }}"

@@ -30,7 +30,7 @@
 
     - name: Populate Dockerfile for Jenkins
       ansible.builtin.template:
-        src: "../templates/Dockerfile"
+        src: Dockerfile
         dest: "{{ jenkins_app_dir }}/Dockerfile"
         group: docker
         owner: ci
