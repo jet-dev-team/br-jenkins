@@ -1,0 +1,33 @@
+---
+
+- name: Backup the Jenkins
+  hosts: host
+
+  vars:
+    jenkins_docker_volume: 'jenkins_home'
+    backups_dir: /srv/backups/jenkins
+    docker_volume_backup_version: 'latest'
+
+  tasks:
+    - name: Make sure local backups directory exists
+      become: true
+      ansible.builtin.file:
+        path: "{{ backups_dir }}"
+        state: directory
+        group: docker
+        owner: ci
+        recurse: true
+        mode: "0750"
+
+    - name: Run backup container
+      community.docker.docker_container:
+        name: jenkins-backup
+        image: "offen/docker-volume-backup:{{ docker_volume_backup_version }}"
+        volumes:
+          - "{{ jenkins_docker_volume }}:/backup:ro"
+          - "{{ backups_dir }}:/archive"
+        env:
+          BACKUP_LATEST_SYMLINK: 'backup.latest.tar.gz'
+          BACKUP_RETENTION_DAYS: '7'
+        entrypoint: 'backup'
+        auto_remove: true

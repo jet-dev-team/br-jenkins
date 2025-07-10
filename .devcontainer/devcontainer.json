@@ -1,0 +1,32 @@
+{
+  "name": "CI Container",
+  "image": "mcr.microsoft.com/devcontainers/base",
+  "args": {
+    "VARIANT": "debian12"
+  },
+  "features": {
+    "ghcr.io/devcontainers-extra/features/ansible:2": {},
+    "ghcr.io/hspaans/devcontainer-features/ansible-lint:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.tabSize": 2,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        "files.associations": {
+          "playbook.yml": "ansible",
+          "*.playbook.yml": "ansible",
+          "*.pipeline": "groovy"
+        }
+      },
+      "extensions": [
+        "redhat.ansible",
+        "marlon407.code-groovy",
+        "redhat.vscode-yaml",
+        "matthewpi.caddyfile-support"
+      ]
+    }
+  },
+  "postCreateCommand": "ansible-galaxy collection install community.docker ansible.posix community.general -f"
+}
