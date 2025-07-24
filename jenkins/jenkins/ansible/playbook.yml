@@ -4,7 +4,7 @@
   hosts: host
 
   vars:
-    jenkins_version: 2.504.3
+    jenkins_version: 2.516.1
     jenkins_app_dir: /srv/jenkins
     jenkins_docker_volume: jenkins_home
     jenkins_docker_network: proxy

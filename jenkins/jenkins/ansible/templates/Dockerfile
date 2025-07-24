@@ -13,7 +13,7 @@ RUN apt-get update \
 RUN python3 -m venv /opt/ansible-venv \
     && . /opt/ansible-venv/bin/activate \
     && pip install --upgrade pip \
-    && pip install ansible-core \
+    && pip install ansible \
     && deactivate
 
 # Make sure the Ansible venv binaries are in the PATH
